@@ -38,10 +38,74 @@ Target Layer2 and Eth_Mainnet
 
 - Statehash on L1: https://etherscan.io/address/0xabea9132b05a70803a4e85094fd0e1800777fbef
 - The block browser: https://zkscan.io/
-- API: https://zksync.io/apiv02-docs/
+- API: https://zksync.io/apiv02-docs/ 
+- data structure: https://github.com/matter-labs/zksync/blob/master/docs/protocol.md#example-1
 
 
-The forward generation sequence of data ([data structure](https://github.com/matter-labs/zksync/blob/master/docs/protocol.md#example-1))
+
+> block inclusion proof 
+
+Storage.sol
+```solidity
+/// @dev Total blocks proven.
+uint32 public totalBlocksProven;
+
+/// @dev Stored hashed StoredBlockInfo for some block number
+mapping(uint32 => bytes32) public storedBlockHashes;
+
+/// @Rollup block stored data
+/// @member blockNumber Rollup block number
+/// @member priorityOperations Number of priority operations processed
+/// @member pendingOnchainOperationsHash Hash of all operations that must be processed after verify
+/// @member timestamp Rollup block timestamp, have the same format as Ethereum block constant
+/// @member stateHash Root hash of the rollup state
+/// @member commitment Verified input for the zkSync circuit
+struct StoredBlockInfo {
+    uint32 blockNumber;
+    uint64 priorityOperations;
+    bytes32 pendingOnchainOperationsHash;
+    uint256 timestamp;
+    bytes32 stateHash;
+    bytes32 commitment;
+}
+/// @notice Returns the keccak hash of the ABI-encoded StoredBlockInfo
+function hashStoredBlockInfo(StoredBlockInfo memory _storedBlockInfo) internal pure returns (bytes32) {
+    return keccak256(abi.encode(_storedBlockInfo));
+}
+```
+
+zksync.sol
+```solidity
+contract ZkSync is UpgradeableMaster, Storage, Config, Events, ReentrancyGuard  {...
+    
+    
+    /// @notice Commit block
+    /// @notice 1. Checks onchain operations, timestamp.
+    /// @notice 2. Store block commitments
+    function commitBlocks(StoredBlockInfo memory _lastCommittedBlockData, CommitBlockInfo[] memory _newBlocksData)
+        external
+        nonReentrant
+    {
+        ...
+        storedBlockHashes[_lastCommittedBlockData.blockNumber] = hashStoredBlockInfo(_lastCommittedBlockData);
+        ...
+    }
+}
+```
+
+block inclusion proof used in this pseudocode language:
+``` 
+ block_inclusion_proof = zksync(contract_Address_On_L1).storedBlockHashes[blockNum_Have_TargetTX]
+ if (blockNum_Have_TargetTX <= totalBlocksProven):
+    return True , "block_inclusion_proof is effective"
+ else:
+    return False, "block_inclusion_proof is not effective"
+```
+
+
+> transaction inclusion proof
+
+
 
 
 
