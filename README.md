@@ -40,6 +40,7 @@ Target Layer2 and Eth_Mainnet
 - The block browser: https://zkscan.io/
 - API: https://zksync.io/apiv02-docs/ 
 - data structure: https://github.com/matter-labs/zksync/blob/master/docs/protocol.md#example-1
+- project architecture: https://github.com/matter-labs/zksync/blob/master/docs/architecture.md
 
 
 
@@ -96,14 +97,19 @@ contract ZkSync is UpgradeableMaster, Storage, Config, Events, ReentrancyGuard  
 block inclusion proof used in this pseudocode language:
 ``` 
  block_inclusion_proof = zksync(contract_Address_On_L1).storedBlockHashes[blockNum_Have_TargetTX]
- if (blockNum_Have_TargetTX <= totalBlocksProven):
+ if (blockNum_Have_TargetTX <= zksync(contract_Address_On_L1).totalBlocksProven):
     return True , "block_inclusion_proof is effective"
  else:
     return False, "block_inclusion_proof is not effective"
 ```
 
 
-> transaction inclusion proof
+
+
+
+
+
+
 
 
 
